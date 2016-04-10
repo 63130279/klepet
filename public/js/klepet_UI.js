@@ -29,8 +29,8 @@ function procesirajVnosUporabnika(klepetApp, socket) {
     sporocilo = filtirirajVulgarneBesede(sporocilo);
     ugotoviYoutube(sporocilo);
     for(var i = 0; i < YoutubeLinki.length; i++) {
-      sporocilo = sporocilo +"";
-    }
+      sporocilo = sporocilo +" <iframe width='200' height='150' src='https://www.youtube.com/embed/" + YoutubeLinki[i]+"' allowfullscreen></iframe>";
+    } 
     klepetApp.posljiSporocilo(trenutniKanal, sporocilo);
     $('#sporocila').append(divElementEnostavniTekst(sporocilo));
     $('#sporocila').scrollTop($('#sporocila').prop('scrollHeight'));
@@ -51,11 +51,13 @@ var YoutubeLinki=[];
 function ugotoviYoutube(vhod) {
   var trak=[];
   trak = vhod.split(' ');
+  var stev=0;
   for(var i = 0; i < trak.length; i++)
   {
     if(trak[i].substr(0,32) == "https://www.youtube.com/watch?v=")
     {
-      YoutubeLinki = trak[i];
+      YoutubeLinki[stev] = trak[i].substring(32,trak[i].length);
+      stev++;
     }
   }
 }
