@@ -1,7 +1,15 @@
 function divElementEnostavniTekst(sporocilo) {
   var jeSmesko = sporocilo.indexOf('http://sandbox.lavbic.net/teaching/OIS/gradivo/') > -1;
-  if (jeSmesko) {
-    sporocilo = sporocilo.replace(/\</g, '&lt;').replace(/\>/g, '&gt;').replace('&lt;img', '<img').replace('png\' /&gt;', 'png\' />');
+  var jeSlika = sporocilo.indexOf('img') > -1;
+   console.log(jeSlika); 
+  if ( jeSmesko || jeSlika ) {
+  sporocilo = sporocilo.replace(/\</g, '&lt;')
+  .replace(/\>/g, '&gt;')
+  .replace(/&lt;img/g, '<img')
+  .replace(/png\' \/&gt;/g, 'png\' />')
+  .replace(/jpg\' \/&gt;/g, 'jpg\' />')
+  .replace(/gif\' \/&gt;/g, 'gif\' />');
+    console.log("sporočilo vsebuje sliko");  
     return $('<div style="font-weight: bold"></div>').html(sporocilo);
   } else {
     return $('<div style="font-weight: bold;"></div>').text(sporocilo);
@@ -10,6 +18,10 @@ function divElementEnostavniTekst(sporocilo) {
 
 function divElementHtmlTekst(sporocilo) {
   return $('<div></div>').html('<i>' + sporocilo + '</i>');
+}
+function divSlike(sporocilo) {
+  return $('<div></div>').html('<img style="width:200px; margin-left: 20px;" src=/"'+sporocilo+'/" />');
+  
 }
 
 function procesirajVnosUporabnika(klepetApp, socket) {
@@ -22,11 +34,17 @@ function procesirajVnosUporabnika(klepetApp, socket) {
     if (sistemskoSporocilo) {
       $('#sporocila').append(divElementHtmlTekst(sistemskoSporocilo));
     }
-  } else {
+  }  else {
     sporocilo = filtirirajVulgarneBesede(sporocilo);
+    ugotoviNaslov(sporocilo);
+    for(var i = 0; i < potDoSlike.length; i++)
+    {
+      sporocilo = sporocilo+" <img style='width:200px; margin-left: 20px;' src='"+potDoSlike[i]+"' /> ";
+    }
     klepetApp.posljiSporocilo(trenutniKanal, sporocilo);
     $('#sporocila').append(divElementEnostavniTekst(sporocilo));
     $('#sporocila').scrollTop($('#sporocila').prop('scrollHeight'));
+    potDoSlike=[];
   }
 
   $('#poslji-sporocilo').val('');
@@ -39,6 +57,26 @@ var vulgarneBesede = [];
 $.get('/swearWords.txt', function(podatki) {
   vulgarneBesede = podatki.split('\r\n');
 });
+var potDoSlike = [];
+function ugotoviNaslov(vhod) {
+  var nizi = [];
+  nizi = vhod.split(' ');
+  var stevec=0;
+  for(var i = 0; i < nizi.length; i++)
+  {
+    if(nizi[i].substr(0,7) == "http://" || nizi[i].substr(0,8) == "https://")
+    {
+      var koncnica = nizi[i].substring(nizi[i].length-4, nizi[i].length);
+      if(koncnica == ".png" || koncnica == ".jpg" || koncnica == ".gif")
+      {
+        potDoSlike[stevec] = nizi[i];
+        stevec++;
+      }
+    }
+  }
+  
+}
+
 
 function filtirirajVulgarneBesede(vhod) {
   for (var i in vulgarneBesede) {
