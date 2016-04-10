@@ -1,15 +1,21 @@
 function divElementEnostavniTekst(sporocilo) {
   var jeSmesko = sporocilo.indexOf('http://sandbox.lavbic.net/teaching/OIS/gradivo/') > -1;
   var jeSlika = sporocilo.indexOf('img') > -1;
-   console.log(jeSlika); 
-  if ( jeSmesko || jeSlika ) {
-  sporocilo = sporocilo.replace(/\</g, '&lt;')
-  .replace(/\>/g, '&gt;')
-  .replace(/&lt;img/g, '<img')
-  .replace(/png\' \/&gt;/g, 'png\' />')
-  .replace(/jpg\' \/&gt;/g, 'jpg\' />')
-  .replace(/gif\' \/&gt;/g, 'gif\' />');
-    console.log("sporočilo vsebuje sliko");  
+  var jeYoutube = sporocilo.indexOf('iframe') > -1;
+  if ( jeSmesko || jeSlika  || jeYoutube) {
+     sporocilo = sporocilo.replace(/\</g, '&lt;')
+    .replace(/\>/g, '&gt;')
+    .replace(/&lt;img/g, '<img')
+    .replace(/png\' \/&gt;/g, 'png\' />')
+    .replace(/jpg\' \/&gt;/g, 'jpg\' />')
+    .replace(/gif\' \/&gt;/g, 'gif\' />')
+    .replace(/&lt;div/gi,'<div')
+    .replace(/&lt;\/div&gt;/gi,'</div>')
+    .replace(/&gt;/gi,'>')
+    .replace(/&lt;/gi,'<')
+    .replace(/&lt;iframe/gi,'<iframe')
+    .replace(/&lt;\/iframe&gt;/gi,'</iframe>');
+
     return $('<div style="font-weight: bold"></div>').html(sporocilo);
   } else {
     return $('<div style="font-weight: bold;"></div>').text(sporocilo);
@@ -19,10 +25,8 @@ function divElementEnostavniTekst(sporocilo) {
 function divElementHtmlTekst(sporocilo) {
   return $('<div></div>').html('<i>' + sporocilo + '</i>');
 }
-function divSlike(sporocilo) {
-  return $('<div></div>').html('<img style="width:200px; margin-left: 20px;" src=/"'+sporocilo+'/" />');
-  
-}
+
+
 
 function procesirajVnosUporabnika(klepetApp, socket) {
   var sporocilo = $('#poslji-sporocilo').val();
@@ -41,10 +45,15 @@ function procesirajVnosUporabnika(klepetApp, socket) {
     {
       sporocilo = sporocilo+" <img style='width:200px; margin-left: 20px;' src='"+potDoSlike[i]+"' /> ";
     }
+    ugotoviYoutube(sporocilo);
+    for(var i = 0; i < YoutubeLinki.length; i++) {
+      sporocilo = sporocilo +" <iframe src='https://www.youtube.com/embed/" + YoutubeLinki[i] + "' style='margin-left: 20px; width: 200px; height: 150px;' allowfullscreen></iframe> ";
+    }
     klepetApp.posljiSporocilo(trenutniKanal, sporocilo);
     $('#sporocila').append(divElementEnostavniTekst(sporocilo));
     $('#sporocila').scrollTop($('#sporocila').prop('scrollHeight'));
     potDoSlike=[];
+    YoutubeLinki=[];
   }
 
   $('#poslji-sporocilo').val('');
@@ -57,6 +66,7 @@ var vulgarneBesede = [];
 $.get('/swearWords.txt', function(podatki) {
   vulgarneBesede = podatki.split('\r\n');
 });
+
 var potDoSlike = [];
 function ugotoviNaslov(vhod) {
   var nizi = [];
@@ -77,6 +87,20 @@ function ugotoviNaslov(vhod) {
   
 }
 
+var YoutubeLinki=[];
+function ugotoviYoutube(input) {
+  var trak=[];
+  trak = input.split(' ');
+  var stev=0;
+  for(var i = 0; i < trak.length; i++)
+  {
+    if(trak[i].substr(0,32) == "https://www.youtube.com/watch?v=")
+    {
+      YoutubeLinki[stev] = trak[i].substring(32,trak[i].length);
+      stev++;
+    }
+  }
+}
 
 function filtirirajVulgarneBesede(vhod) {
   for (var i in vulgarneBesede) {
